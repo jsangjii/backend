@@ -1,12 +1,16 @@
 package com.likelion14.PBL_Spring.member.repository;
 
-import com.likelion14.PBL_Spring.member.domain.role.Role;
 
-public interface MemberRepository {
-    void save(Role member);
-    Role findByName(String name);
-    java.util.List<Role> findAll();
+import com.likelion14.PBL_Spring.member.domain.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.util.Optional;
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    Optional<Member> findByName(String name);
     boolean existsByName(String name);
-    void updateByName(String name, Role updated);
-    boolean deleteMember(String name);
+
+    @Query("select m from Member m where m.name = :name")
+    Optional<Member> findByNameUsingJpql(String name);
 }
