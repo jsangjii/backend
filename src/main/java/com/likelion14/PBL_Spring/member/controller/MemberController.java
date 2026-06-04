@@ -2,6 +2,7 @@ package com.likelion14.PBL_Spring.member.controller;
 
 import com.likelion14.PBL_Spring.member.dto.*;
 import com.likelion14.PBL_Spring.member.service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,72 +21,74 @@ public class MemberController {
         this.memberService = memberService;
     }
 
-    // POST /members/lions - Lion 등록
+    // Lion 등록
     @PostMapping("/lions")
     public ResponseEntity<MemberResponse> createLion(@RequestBody LionCreateRequest request) {
-        Member member = memberService.createLion(request);
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(MemberResponse.from(member));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(MemberResponse.from(memberService.createLion(request)));
     }
 
-    // POST /members/staffs - Staff 등록
+    // Staff 등록
     @PostMapping("/staffs")
     public ResponseEntity<MemberResponse> createStaff(@RequestBody StaffCreateRequest request) {
-        Member member = memberService.createStaff(request);
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(MemberResponse.from(member));
-    }
-    // GET /members - 전체 조회
-    @GetMapping
-    public ResponseEntity<List<MemberResponse>> getAllMembers() {
-        List<MemberResponse> responses = memberService.getAllMembers().stream()
-                .map(MemberResponse::from)
-                .toList();
-        return ResponseEntity.ok(responses);
-    }
-    // GET /members/{id} - 단건 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<MemberResponse> getMember(@PathVariable Long id) {
-        Member member = memberService.findById(id);
-        if (member == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(MemberResponse.from(member));
+         return ResponseEntity.status(HttpStatus.CREATED)
+                 .body(MemberResponse.from(memberService.createStaff(request)));
     }
 
-    // PUT /members/lions/{id} - Lion 수정
+    // 전체 member 조회
+    @Operation(summary = "전체 멤버 검색")
+    @GetMapping
+    public ResponseEntity<List<MemberResponse>> getAllMembers(@RequestParam(required = false) String part) {
+        List<MemberResponse> responses;
+
+        if (part != null) {
+            responses = memberService.getMembersByPart(part).stream()
+                    .map(MemberResponse::from)
+                    .toList();
+        } else {
+            responses = memberService.getAllMembers().stream()
+                    .map(MemberResponse::from)
+                    .toList();
+        }
+
+        return ResponseEntity.ok(responses);
+    }
+
+    // member id로 단건 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<MemberResponse> getMember(@PathVariable Long id) {
+        return ResponseEntity.ok(MemberResponse.from(memberService.findById(id)));
+    }
+
+    // member 이름으로 단건 조회
+    @Operation(summary = "이름으로 멤버 검색")
+    @GetMapping("/search")
+    public ResponseEntity<?> searchByName(@RequestParam("name") String name) {
+        return ResponseEntity.ok(memberService.searchByName(name));
+    }
+
+    // Lion 수정
+    @Operation(summary = "Lion 정보 수정")
     @PutMapping("/lions/{id}")
     public ResponseEntity<MemberResponse> updateLion(@PathVariable Long id,
                                                      @RequestBody LionUpdateRequest request) {
-        Member updated = memberService.updateLion(id, request);
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(MemberResponse.from(updated));
+        return ResponseEntity.ok(MemberResponse.from(memberService.updateLion(id, request)));
     }
 
-    // PUT /members/staffs/{id} - Staff 수정
+    // Staff 수정
+    @Operation(summary = "Staff 정보 수정")
     @PutMapping("/staffs/{id}")
     public ResponseEntity<MemberResponse> updateStaff(@PathVariable Long id,
                                                       @RequestBody StaffUpdateRequest request) {
-        Member updated = memberService.updateStaff(id, request);
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(MemberResponse.from(updated));
+       return ResponseEntity.ok(MemberResponse.from(memberService.updateStaff(id, request)));
     }
 
-    // DELETE /members/{id} - 멤버 삭제
+    // member 삭제
+    @Operation(summary = "멤버 삭제")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
-        boolean success = memberService.deleteMember(id);
-        if (!success) {
-            return ResponseEntity.notFound().build();
-        }
+        memberService.deleteMember(id);
         return ResponseEntity.noContent().build();
     }
+
 }

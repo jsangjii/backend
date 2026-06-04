@@ -5,7 +5,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
 
 import javax.management.relation.Role;
 
@@ -29,6 +32,9 @@ public class Member {
 
     private String studentId;
     private String position;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Assignment> assignments = new ArrayList<>();
 
     protected Member() {
     }

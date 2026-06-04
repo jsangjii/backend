@@ -1,9 +1,12 @@
 package com.likelion14.PBL_Spring.member.service;
 
+import com.likelion14.PBL_Spring.global.exception.DuplicateMemberException;
+import com.likelion14.PBL_Spring.global.exception.MemberNotFoundException;
 import com.likelion14.PBL_Spring.member.domain.RoleType;
 import com.likelion14.PBL_Spring.member.dto.LionUpdateRequest;
 import com.likelion14.PBL_Spring.member.dto.StaffCreateRequest;
 import com.likelion14.PBL_Spring.member.dto.StaffUpdateRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;;
 import com.likelion14.PBL_Spring.member.dto.LionCreateRequest;
 import com.likelion14.PBL_Spring.member.repository.MemberRepository;
@@ -19,9 +22,10 @@ public class MemberService {
     }
 
     // Lion 등록
+    @Transactional
     public Member createLion(LionCreateRequest request) {
         if (repository.existsByName(request.getName())) {
-            return null;
+            throw new DuplicateMemberException("이미 존재하는 이름입니다. name: " + request.getName());
         }
         Member member = Member.builder()
                 .name(request.getName())
@@ -35,54 +39,71 @@ public class MemberService {
 
         return repository.save(member);
     }
+
     // Staff 등록
+    @Transactional
     public Member createStaff(StaffCreateRequest request) {
         if (repository.existsByName(request.getName())) {
-            return null;
+            throw new DuplicateMemberException("이미 존재하는 이름입니다. name: " + request.getName());
         }
         Member member = new Member(request.getName(), request.getMajor(), request.getGeneration(),
                 request.getPart(), RoleType.ADMIN, null, request.getPosition());
         return repository.save(member);
     }
+
     // Lion 수정
+    @Transactional
     public Member updateLion(Long id, LionUpdateRequest request) {
-        Member member = repository.findById(id).orElse(null);
-        if (member == null) {
-            return null;
-        }
+        Member member = repository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("해당 멤버를 찾을 수 없습니다. id: " + id));
+
         member.updateInfo(request.getMajor(), request.getGeneration(), request.getPart());
         member.updateStudentId(request.getStudentId());
         return repository.save(member);
-    }
-    // 스태프 수정
-    public Member updateStaff(Long id, StaffUpdateRequest request) {
-        Member member = repository.findById(id).orElse(null);
-        if (member == null) {
-            return null;
         }
-        member.updateInfo(request.getMajor(), request.getGeneration(), request.getPart());
-        member.updatePosition(request.getPosition());
-        return repository.save(member);
-    }
-    //이름으로 검색
+
+    // Staff 수정
+    @Transactional
+    public Member updateStaff(Long id, StaffUpdateRequest request) {
+        Member staff = repository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("해당 멤버를 찾을 수 없습니다. id: " + id));
+
+        staff.updateInfo(request.getMajor(), request.getGeneration(), request.getPart());
+        staff.updatePosition(request.getPosition());
+        return repository.save(staff);
+        }
+
+    //이름으로 Member 조회
     public Member searchByName(String name) {
-        return repository.findByName(name).orElse(null);
+        return repository.findByName(name)
+                .orElseThrow(() -> new MemberNotFoundException("해당 멤버를 찾을 수 없습니다. name: " + name));
+        }
+
+    //ID로 Member 조회
+    public Member findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("해당 멤버를 찾을 수 없습니다. id: " + id));
     }
-    //전체 조회
+
+    //전체 member 조회
     public List<Member> getAllMembers() {
         return repository.findAll();
     }
-    //ID로 조회
-    public Member findById(Long id) {
-        return repository.findById(id).orElse(null);
-    }
-    //삭제
-    public boolean deleteMember(Long id) {
+
+    //Member 삭제
+    @Transactional
+    public void deleteMember(Long id) {
         if (!repository.existsById(id)) {
-            return false;
+            throw new MemberNotFoundException("해당 멤버를 찾을 수 없습니다. id: " + id);
         }
         repository.deleteById(id);
-        return true;
     }
+
+    // 파트별 Member 목록 조회
+    public List<Member> getMembersByPart(String part) {
+        return repository.findByPart(part);
+    }
+
 }
+
 

@@ -1,0 +1,13 @@
+package com.likelion14.PBL_Spring.member.repository;
+import com.likelion14.PBL_Spring.member.domain.Assignment;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+
+public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
+    List<Assignment> findByMemberId(Long memberId);
+
+    List<Assignment> findByTitleContaining(String keyword);
+}
